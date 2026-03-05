@@ -1,0 +1,1553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Field OS">
+<title>Field OS — Cal</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0b0a07;
+  --bg2: #111009;
+  --bg3: #181510;
+  --gold: #c8993a;
+  --gold-dim: #7a5e22;
+  --gold-glow: rgba(200,153,58,0.15);
+  --red: #8b2020;
+  --red-dim: rgba(139,32,32,0.12);
+  --blue: #2d5480;
+  --blue-light: #4a84c0;
+  --blue-dim: rgba(45,84,128,0.12);
+  --green: #3a7a42;
+  --green-light: #5aaa64;
+  --green-dim: rgba(58,122,66,0.12);
+  --amber: #b87820;
+  --text: #ddd4b8;
+  --text-dim: #6a5f48;
+  --text-mid: #9a8e72;
+  --border: rgba(200,184,130,0.1);
+  --border-gold: rgba(200,153,58,0.28);
+  --border-bright: rgba(200,153,58,0.5);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Crimson Pro', Georgia, serif;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  top: 0; left: 0;
+}
+
+/* ── GRAIN ── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 999;
+}
+
+/* ── HEADER ── */
+.header {
+  flex-shrink: 0;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 16px 8px;
+}
+.identity-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin-bottom: 7px;
+}
+.id-item { flex: 1; text-align: center; }
+.id-word {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  letter-spacing: 0.14em;
+  color: var(--gold);
+  line-height: 1;
+  text-shadow: 0 0 20px rgba(200,153,58,0.3);
+}
+.id-sub {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 7px;
+  letter-spacing: 0.18em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+.id-sep { width: 1px; height: 30px; background: var(--border-gold); margin: 0 6px; flex-shrink: 0; }
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.date-str {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+.daily-score {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.score-pips { display: flex; gap: 3px; }
+.pip {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  border: 1px solid var(--text-dim);
+  background: transparent;
+  transition: all 0.3s;
+}
+.pip.lit { background: var(--gold); border-color: var(--gold); box-shadow: 0 0 5px var(--gold); }
+.score-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+  transition: color 0.3s;
+}
+.score-num.full { color: var(--gold); text-shadow: 0 0 12px var(--gold); }
+
+/* ── SCROLL ── */
+.scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 16px;
+}
+.scroll-area::-webkit-scrollbar { display: none; }
+
+/* ── NAV ── */
+.bottom-nav {
+  flex-shrink: 0;
+  display: flex;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  padding-bottom: var(--safe-bottom);
+}
+.nav-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 2px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  gap: 3px;
+  position: relative;
+}
+.nav-btn.active::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 20%; right: 20%;
+  height: 2px;
+  background: var(--gold);
+  border-radius: 0 0 2px 2px;
+}
+.nav-icon { font-size: 17px; color: var(--text-dim); transition: all 0.2s; }
+.nav-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 7.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  transition: all 0.2s;
+}
+.nav-btn.active .nav-icon,
+.nav-btn.active .nav-label { color: var(--gold); }
+
+/* ── TABS ── */
+.tab { display: none; padding: 14px 15px; }
+.tab.active { display: block; animation: fadeUp 0.22s ease; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── TYPOGRAPHY ── */
+.sec-head {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sec-head::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* ── PRIMARY GOAL BLOCK ── */
+.goal-block {
+  border: 1px solid var(--border-gold);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  background: linear-gradient(135deg, rgba(200,153,58,0.05) 0%, transparent 60%);
+  text-align: center;
+}
+.goal-eyebrow {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  color: var(--gold-dim);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.goal-primary {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  letter-spacing: 0.07em;
+  color: var(--gold);
+  line-height: 1.25;
+}
+.goal-secondary {
+  font-family: 'Crimson Pro', serif;
+  font-size: 12px;
+  font-style: italic;
+  color: var(--text-dim);
+  margin-top: 7px;
+  line-height: 1.6;
+}
+
+/* ── QUESTION CARDS ── */
+.q-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  transition: border 0.2s;
+}
+.q-card:focus-within { border-color: var(--border-gold); }
+.q-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 8.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+.q-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-family: 'Crimson Pro', serif;
+  font-size: 15px;
+  line-height: 1.65;
+  resize: none;
+  outline: none;
+  min-height: 52px;
+}
+.q-input::placeholder { color: var(--text-dim); font-style: italic; }
+
+/* ── SCRIPTURE ── */
+.scripture {
+  border: 1px solid var(--red-dim);
+  border-left: 3px solid var(--red);
+  border-radius: 0 8px 8px 0;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  background: var(--red-dim);
+}
+.scripture-ref {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  color: #a04040;
+  margin-bottom: 5px;
+}
+.scripture-text {
+  font-family: 'Crimson Pro', serif;
+  font-size: 14px;
+  font-style: italic;
+  color: var(--text-mid);
+  line-height: 1.7;
+}
+
+/* ── PILLAR ROWS ── */
+.pillar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 13px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.22s;
+  user-select: none;
+}
+.pillar.checked {
+  border-color: var(--border-gold);
+  background: var(--gold-glow);
+}
+.pillar.rest-day {
+  border-color: rgba(90,170,100,0.3);
+  background: var(--green-dim);
+}
+.p-box {
+  width: 22px; height: 22px;
+  border-radius: 4px;
+  border: 1.5px solid var(--text-dim);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px;
+  color: transparent;
+  flex-shrink: 0;
+  transition: all 0.22s;
+  font-weight: 700;
+}
+.pillar.checked .p-box { background: var(--gold); border-color: var(--gold); color: var(--bg); }
+.pillar.rest-day .p-box { background: var(--green); border-color: var(--green); color: var(--bg); }
+.p-info { flex: 1; min-width: 0; }
+.p-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 15px;
+  letter-spacing: 0.07em;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.p-desc {
+  font-family: 'Crimson Pro', serif;
+  font-size: 12px;
+  font-style: italic;
+  color: var(--text-dim);
+  margin-top: 2px;
+  line-height: 1.35;
+}
+.p-icon { font-size: 18px; flex-shrink: 0; }
+
+/* ── PROTOCOL CARDS ── */
+.proto {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  margin-bottom: 10px;
+  overflow: hidden;
+  transition: border 0.2s;
+}
+.proto.open { border-color: var(--border-gold); }
+.proto-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 13px 14px;
+  cursor: pointer;
+}
+.proto-pip {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+.proto-titles { flex: 1; }
+.proto-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 17px;
+  letter-spacing: 0.09em;
+  line-height: 1;
+}
+.proto-tag {
+  font-family: 'Crimson Pro', serif;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--text-dim);
+  margin-top: 3px;
+}
+.proto-arrow {
+  color: var(--text-dim);
+  font-size: 13px;
+  margin-top: 3px;
+  transition: transform 0.25s;
+  flex-shrink: 0;
+}
+.proto.open .proto-arrow { transform: rotate(180deg); }
+.proto-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease;
+}
+.proto.open .proto-body { max-height: 600px; }
+.proto-inner {
+  padding: 0 14px 14px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+.proto-steps { list-style: none; }
+.proto-step {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 9px;
+  font-size: 14px;
+  color: var(--text-mid);
+  line-height: 1.6;
+}
+.step-n {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  color: var(--text-dim);
+  flex-shrink: 0;
+  margin-top: 4px;
+  letter-spacing: 0.05em;
+}
+.proto-anchor {
+  margin-top: 11px;
+  padding: 10px 13px;
+  border-radius: 5px;
+  font-style: italic;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ── TRACKER / LOG ── */
+.log-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.log-box {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 13px;
+  text-align: center;
+  transition: border 0.2s;
+}
+.log-box:focus-within { border-color: var(--border-gold); }
+.log-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+.log-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border-gold);
+  color: var(--gold);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 30px;
+  text-align: center;
+  outline: none;
+  padding: 2px 0;
+  letter-spacing: 0.04em;
+}
+.log-unit {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 8px;
+  color: var(--text-dim);
+  margin-top: 5px;
+  letter-spacing: 0.1em;
+}
+.log-week-total {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 8px;
+  color: var(--green-light);
+  margin-top: 4px;
+  letter-spacing: 0.08em;
+}
+
+/* ── DASHBOARD STATS ── */
+.stat-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.stat-box {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 11px 8px;
+  text-align: center;
+}
+.stat-val {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 24px;
+  color: var(--gold);
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+.stat-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 7px;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+.stat-sub {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 7px;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+
+/* ── STREAK GRID ── */
+.streak-wrap {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 13px;
+  margin-bottom: 10px;
+}
+.streak-legend {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+.legend-pip {
+  width: 10px; height: 10px;
+  border-radius: 2px;
+}
+.streak-days {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+.s-day {
+  width: calc((100% - 87px) / 30);
+  min-width: 22px;
+  aspect-ratio: 1;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 8px;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+.s-day.today { border-color: var(--gold); color: var(--gold); }
+.s-day.full { background: var(--gold); border-color: var(--gold); color: var(--bg); }
+.s-day.partial { background: var(--gold-dim); border-color: var(--gold-dim); color: var(--bg2); }
+.s-day.rest { background: var(--green); border-color: var(--green); color: var(--bg); }
+
+/* ── GOAL PROGRESS BARS ── */
+.goal-progress {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 13px;
+  margin-bottom: 10px;
+}
+.gp-row {
+  margin-bottom: 12px;
+}
+.gp-row:last-child { margin-bottom: 0; }
+.gp-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 5px;
+}
+.gp-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-mid);
+}
+.gp-val {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 13px;
+  color: var(--gold);
+  letter-spacing: 0.05em;
+}
+.gp-bar-bg {
+  height: 4px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.gp-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.6s ease;
+}
+
+/* ── NORTH STAR ── */
+.ns-block { margin-bottom: 18px; }
+.ns-label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  color: var(--gold-dim);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ns-label::before { content: ''; width: 14px; height: 1px; background: var(--gold-dim); flex-shrink: 0; }
+.ns-line {
+  padding: 7px 0 7px 13px;
+  border-left: 2px solid rgba(200,153,58,0.18);
+  font-size: 14px;
+  color: var(--text-mid);
+  line-height: 1.7;
+  margin-bottom: 3px;
+}
+.vision-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 16px;
+}
+.vision-pill {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: 1px solid;
+}
+
+/* ── RED FLAGS ── */
+.flag-list { background: var(--bg3); border: 1px solid rgba(139,32,32,0.25); border-radius: 9px; padding: 13px; }
+.flag-item {
+  display: flex;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+  color: var(--text-mid);
+  line-height: 1.5;
+}
+.flag-item:last-child { border-bottom: none; padding-bottom: 0; }
+.flag-item:first-child { padding-top: 0; }
+.flag-dot { color: var(--red); flex-shrink: 0; font-size: 12px; margin-top: 3px; }
+
+/* ── WEEKLY HISTORY ── */
+.week-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.week-row:last-child { border-bottom: none; }
+.week-label { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: var(--text-dim); letter-spacing: 0.1em; }
+.week-stats { display: flex; gap: 14px; }
+.week-stat { text-align: right; }
+.week-stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: var(--gold); letter-spacing: 0.05em; }
+.week-stat-lbl { font-family: 'Share Tech Mono', monospace; font-size: 7px; color: var(--text-dim); text-transform: uppercase; }
+
+/* ── MISC ── */
+.divider { height: 1px; background: var(--border); margin: 14px 0; }
+.bounce { animation: bnc 0.28s ease; }
+@keyframes bnc { 0%,100%{transform:scale(1)} 50%{transform:scale(1.12)} }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="identity-bar">
+    <div class="id-item">
+      <div class="id-word">UNAFRAID</div>
+      <div class="id-sub">posture</div>
+    </div>
+    <div class="id-sep"></div>
+    <div class="id-item">
+      <div class="id-word">BELOVED SON</div>
+      <div class="id-sub">identity</div>
+    </div>
+    <div class="id-sep"></div>
+    <div class="id-item">
+      <div class="id-word">WARRIOR POET</div>
+      <div class="id-sub">calling</div>
+    </div>
+  </div>
+  <div class="header-row">
+    <div class="date-str" id="dateStr">—</div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div id="syncStatus" onclick="openSetup()" style="font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:0.1em;color:var(--text-dim);cursor:pointer;"></div>
+      <div class="daily-score">
+        <div class="score-pips" id="scorePips"></div>
+        <div class="score-num" id="scoreNum">0/4</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCROLL -->
+<div class="scroll-area" id="scrollArea">
+
+  <!-- ══ TAB: MORNING ══ -->
+  <div class="tab active" id="tab-morning">
+
+    <div class="goal-block">
+      <div class="goal-eyebrow">Primary Goal — 2026</div>
+      <div class="goal-primary">Am I closer to Jesus<br>than I've ever been?</div>
+      <div class="goal-secondary">Manuscript · Running · Strategic at Veeco · Family more connected</div>
+    </div>
+
+    <div class="sec-head">Morning Non-Negotiables</div>
+
+    <div class="pillar" id="p-faith" onclick="togglePillar('faith')">
+      <div class="p-box" id="pb-faith">✓</div>
+      <div class="p-info">
+        <div class="p-name">Time With God First</div>
+        <div class="p-desc">Bible + prayer. The source. Before everything.</div>
+      </div>
+      <div class="p-icon">✝</div>
+    </div>
+
+    <div class="pillar" id="p-family" onclick="togglePillar('family')">
+      <div class="p-box" id="pb-family">✓</div>
+      <div class="p-info">
+        <div class="p-name">Intentional Family Moment</div>
+        <div class="p-desc">H · W · J — set the intention now.</div>
+      </div>
+      <div class="p-icon">⚓</div>
+    </div>
+
+    <div class="divider"></div>
+    <div class="sec-head">Two Questions</div>
+
+    <div class="q-card">
+      <div class="q-label">What would move the needle today?</div>
+      <textarea class="q-input" id="q-needle" placeholder="Specific. Not a list — the one thing." rows="2" oninput="autoSave()"></textarea>
+    </div>
+
+    <div class="q-card">
+      <div class="q-label">What came up in your time with God this morning?</div>
+      <textarea class="q-input" id="q-god" placeholder="A word, a verse, a nudge. What did you hear?" rows="2" oninput="autoSave()"></textarea>
+    </div>
+
+    <div class="divider"></div>
+    <div class="sec-head">Today's Scripture</div>
+    <div class="scripture">
+      <div class="scripture-ref" id="scrRef">—</div>
+      <div class="scripture-text" id="scrText">—</div>
+    </div>
+
+  </div>
+
+  <!-- ══ TAB: PROTOCOLS ══ -->
+  <div class="tab" id="tab-protocols">
+
+    <div class="sec-head">Deploy When Needed</div>
+
+    <!-- Benevolent Detachment -->
+    <div class="proto" id="proto-detach">
+      <div class="proto-head" onclick="toggleProto('detach')">
+        <div class="proto-pip" style="background:#4a84c0; box-shadow:0 0 7px #4a84c0;"></div>
+        <div class="proto-titles">
+          <div class="proto-name" style="color:#4a84c0;">Benevolent Detachment</div>
+          <div class="proto-tag">Care deeply. Control nothing.</div>
+        </div>
+        <div class="proto-arrow">▾</div>
+      </div>
+      <div class="proto-body">
+        <div class="proto-inner">
+          <ul class="proto-steps">
+            <li class="proto-step"><span class="step-n">01</span><span>Name what you're feeling — don't suppress it, just locate it.</span></li>
+            <li class="proto-step"><span class="step-n">02</span><span>Ask: Is this mine to carry, or am I trying to fix someone else's interior?</span></li>
+            <li class="proto-step"><span class="step-n">03</span><span>Speak your truth clearly, once. Then release the outcome.</span></li>
+            <li class="proto-step"><span class="step-n">04</span><span>Their response is their work. Your response is yours.</span></li>
+            <li class="proto-step"><span class="step-n">05</span><span>Stay warm. Stay present. Don't disappear — just don't grip.</span></li>
+          </ul>
+          <div class="proto-anchor" style="background:var(--blue-dim); border-left:3px solid #4a84c0; color:#4a84c0;">"I can love fully without needing to control the result."</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- No External Validation -->
+    <div class="proto" id="proto-valid">
+      <div class="proto-head" onclick="toggleProto('valid')">
+        <div class="proto-pip" style="background:var(--gold); box-shadow:0 0 7px var(--gold);"></div>
+        <div class="proto-titles">
+          <div class="proto-name" style="color:var(--gold);">No External Validation</div>
+          <div class="proto-tag">Excellence is the evidence. You don't need the verdict.</div>
+        </div>
+        <div class="proto-arrow">▾</div>
+      </div>
+      <div class="proto-body">
+        <div class="proto-inner">
+          <ul class="proto-steps">
+            <li class="proto-step"><span class="step-n">01</span><span>Before acting — check the motive. Am I doing this because it's right, or to be seen?</span></li>
+            <li class="proto-step"><span class="step-n">02</span><span>If approval comes — receive it gracefully. Don't chase it.</span></li>
+            <li class="proto-step"><span class="step-n">03</span><span>If approval doesn't come — do it anyway. The work is the standard.</span></li>
+            <li class="proto-step"><span class="step-n">04</span><span>Your authenticity IS your visible pursuit of excellence. Keep moving.</span></li>
+            <li class="proto-step"><span class="step-n">05</span><span>Would I do this if no one ever knew? That's the filter.</span></li>
+          </ul>
+          <div class="proto-anchor" style="background:var(--gold-glow); border-left:3px solid var(--gold); color:var(--gold);">"I don't need the room to see it. I just need to do it."</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Landmine Protocol -->
+    <div class="proto" id="proto-land">
+      <div class="proto-head" onclick="toggleProto('land')">
+        <div class="proto-pip" style="background:#c04040; box-shadow:0 0 7px #8b2020;"></div>
+        <div class="proto-titles">
+          <div class="proto-name" style="color:#c04040;">Landmine Protocol</div>
+          <div class="proto-tag">Recognize it. Don't step on it. Don't detonate.</div>
+        </div>
+        <div class="proto-arrow">▾</div>
+      </div>
+      <div class="proto-body">
+        <div class="proto-inner">
+          <ul class="proto-steps">
+            <li class="proto-step"><span class="step-n">01</span><span><strong style="color:#c04040;">PAUSE.</strong> Notice the activation. Body tightens. Voice changes. Here we go.</span></li>
+            <li class="proto-step"><span class="step-n">02</span><span>Do NOT problem-solve. This is not a problem to fix right now.</span></li>
+            <li class="proto-step"><span class="step-n">03</span><span>Lower your voice one level. Slow down physically.</span></li>
+            <li class="proto-step"><span class="step-n">04</span><span>Validate first: "That sounds really hard. I hear you."</span></li>
+            <li class="proto-step"><span class="step-n">05</span><span>If escalating — create space: "I want to be present for this. Give me 5 minutes."</span></li>
+            <li class="proto-step"><span class="step-n">06</span><span>Return calm. Reconnect. You're on the same team.</span></li>
+          </ul>
+          <div class="proto-anchor" style="background:var(--red-dim); border-left:3px solid #8b2020; color:#c04040;">"She needs me present, not perfect. Stay in the room."</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+    <div class="sec-head">Daily Pillars</div>
+
+    <div class="pillar" id="p-body" onclick="togglePillar('body')">
+      <div class="p-box" id="pb-body">✓</div>
+      <div class="p-info">
+        <div class="p-name">Body — Train or Run</div>
+        <div class="p-desc">5–6 days. Excellence is visible. Rest is intentional.</div>
+      </div>
+      <div class="p-icon">⚡</div>
+    </div>
+
+    <div class="pillar" id="p-veeco" onclick="togglePillar('veeco')">
+      <div class="p-box" id="pb-veeco">✓</div>
+      <div class="p-info">
+        <div class="p-name">Veeco — Strategic Play</div>
+        <div class="p-desc">Emotionally detached from outcomes. Tactically locked on the process.</div>
+      </div>
+      <div class="p-icon">⚙</div>
+    </div>
+
+    <div class="pillar" id="p-write" onclick="togglePillar('write')">
+      <div class="p-box" id="pb-write">✓</div>
+      <div class="p-info">
+        <div class="p-name">Write — Stick to the Plan</div>
+        <div class="p-desc">Follow the manuscript plan. Not random. Consistent.</div>
+      </div>
+      <div class="p-icon">✍</div>
+    </div>
+
+  </div>
+
+  <!-- ══ TAB: EVENING ══ -->
+  <div class="tab" id="tab-evening">
+
+    <div class="sec-head">Daily Log</div>
+
+    <div class="log-grid">
+      <div class="log-box">
+        <div class="log-label">Miles Today</div>
+        <input type="number" class="log-input" id="miles-today" placeholder="0" inputmode="decimal" oninput="updateWeekTotals()">
+        <div class="log-unit">miles</div>
+        <div class="log-week-total" id="week-miles-label">week: 0 mi</div>
+      </div>
+      <div class="log-box">
+        <div class="log-label">Words Today</div>
+        <input type="number" class="log-input" id="words-today" placeholder="0" inputmode="numeric" oninput="updateWeekTotals()">
+        <div class="log-unit">words</div>
+        <div class="log-week-total" id="week-words-label">week: 0 wds</div>
+      </div>
+    </div>
+
+    <div class="sec-head">Evening Reflection</div>
+
+    <div class="q-card">
+      <div class="q-label">Closer to Jesus today — or created distance?</div>
+      <textarea class="q-input" id="q-eve1" placeholder="Honest. One sentence is enough." rows="2" oninput="autoSave()"></textarea>
+    </div>
+
+    <div class="q-card">
+      <div class="q-label">Making real progress or just staying busy?</div>
+      <textarea class="q-input" id="q-eve2" placeholder="Name the difference." rows="2" oninput="autoSave()"></textarea>
+    </div>
+
+    <div class="q-card">
+      <div class="q-label">One thing I'm grateful for today.</div>
+      <textarea class="q-input" id="q-eve3" placeholder="Specific. Not generic." rows="2" oninput="autoSave()"></textarea>
+    </div>
+
+    <div class="divider"></div>
+    <div class="sec-head" style="color:#8b2020;">Red Flag Check</div>
+    <div class="flag-list">
+      <div class="flag-item"><span class="flag-dot">⚑</span><span>Missing non-negotiables for more than 3 days in a row</span></div>
+      <div class="flag-item"><span class="flag-dot">⚑</span><span>Feeling like you're "grinding" instead of building</span></div>
+      <div class="flag-item"><span class="flag-dot">⚑</span><span>Resentment toward the book, running, or work</span></div>
+      <div class="flag-item"><span class="flag-dot">⚑</span><span>Family feels like an obligation instead of a priority</span></div>
+      <div class="flag-item"><span class="flag-dot">⚑</span><span>Spiritual life feels dry or distant</span></div>
+    </div>
+
+  </div>
+
+  <!-- ══ TAB: TRACK ══ -->
+  <div class="tab" id="tab-track">
+
+    <div class="sec-head">Current Week</div>
+    <div class="stat-row">
+      <div class="stat-box">
+        <div class="stat-val" id="cw-miles">0</div>
+        <div class="stat-label">Miles</div>
+        <div class="stat-sub">this week</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="cw-words">0</div>
+        <div class="stat-label">Words</div>
+        <div class="stat-sub">this week</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="cw-streak">0</div>
+        <div class="stat-label">Days</div>
+        <div class="stat-sub">completed</div>
+      </div>
+    </div>
+
+    <div class="sec-head">6-Month Targets</div>
+    <div class="goal-progress">
+      <div class="gp-row">
+        <div class="gp-top">
+          <div class="gp-label">Sub-20 Min 5K</div>
+          <div class="gp-val" id="gp-5k-val">Training</div>
+        </div>
+        <div class="gp-bar-bg"><div class="gp-bar-fill" id="gp-5k-bar" style="width:0%;background:var(--blue-light);"></div></div>
+      </div>
+      <div class="gp-row">
+        <div class="gp-top">
+          <div class="gp-label">Total Miles (Goal: 300)</div>
+          <div class="gp-val" id="gp-miles-val">0 mi</div>
+        </div>
+        <div class="gp-bar-bg"><div class="gp-bar-fill" id="gp-miles-bar" style="width:0%;background:var(--green-light);"></div></div>
+      </div>
+      <div class="gp-row">
+        <div class="gp-top">
+          <div class="gp-label">Book Words (Goal: 40,000)</div>
+          <div class="gp-val" id="gp-words-val">0 wds</div>
+        </div>
+        <div class="gp-bar-bg"><div class="gp-bar-fill" id="gp-words-bar" style="width:0%;background:var(--gold);"></div></div>
+      </div>
+      <div class="gp-row" style="margin-bottom:0;">
+        <div class="gp-top">
+          <div class="gp-label">Days Completed (Goal: 130)</div>
+          <div class="gp-val" id="gp-days-val">0 days</div>
+        </div>
+        <div class="gp-bar-bg"><div class="gp-bar-fill" id="gp-days-bar" style="width:0%;background:#c04040;"></div></div>
+      </div>
+    </div>
+
+    <div class="sec-head">30-Day Streak</div>
+    <div class="streak-wrap">
+      <div class="streak-legend">
+        <div class="legend-item"><div class="legend-pip" style="background:var(--gold);"></div>All done</div>
+        <div class="legend-item"><div class="legend-pip" style="background:var(--gold-dim);"></div>Partial</div>
+        <div class="legend-item"><div class="legend-pip" style="background:var(--green);"></div>Rest day</div>
+        <div class="legend-item"><div class="legend-pip" style="background:rgba(255,255,255,0.06); border:1px solid var(--border);"></div>Missed</div>
+      </div>
+      <div class="streak-days" id="streakDays"></div>
+    </div>
+
+    <div class="sec-head">Monthly Totals</div>
+    <div class="stat-row">
+      <div class="stat-box">
+        <div class="stat-val" id="mo-miles">0</div>
+        <div class="stat-label">Miles</div>
+        <div class="stat-sub">this month</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="mo-words">0</div>
+        <div class="stat-label">Words</div>
+        <div class="stat-sub">this month</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="mo-days">0</div>
+        <div class="stat-label">Days</div>
+        <div class="stat-sub">this month</div>
+      </div>
+    </div>
+
+    <div class="sec-head">Year Totals</div>
+    <div class="stat-row">
+      <div class="stat-box">
+        <div class="stat-val" id="yr-miles">0</div>
+        <div class="stat-label">Miles</div>
+        <div class="stat-sub">2026</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="yr-words">0</div>
+        <div class="stat-label">Words</div>
+        <div class="stat-sub">2026</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="yr-days">0</div>
+        <div class="stat-label">Days</div>
+        <div class="stat-sub">2026</div>
+      </div>
+    </div>
+
+    <div class="sec-head">Weekly History</div>
+    <div id="weekHistory" style="background:var(--bg3); border:1px solid var(--border); border-radius:9px; padding:13px;">
+      <div style="font-family:'Crimson Pro',serif; font-size:14px; color:var(--text-dim); font-style:italic; text-align:center; padding:8px 0;">No weeks logged yet.</div>
+    </div>
+
+  </div>
+
+  <!-- ══ TAB: NORTH STAR ══ -->
+  <div class="tab" id="tab-north">
+
+    <div class="goal-block" style="margin-bottom:16px;">
+      <div class="goal-eyebrow">Who I Am</div>
+      <div class="goal-primary">Unafraid · Beloved Son · Warrior Poet</div>
+    </div>
+
+    <div class="vision-pills">
+      <div class="vision-pill" style="border-color:var(--blue-light); color:var(--blue-light);">Ultra Marathon</div>
+      <div class="vision-pill" style="border-color:var(--green-light); color:var(--green-light);">Sub-20 5K</div>
+      <div class="vision-pill" style="border-color:var(--gold); color:var(--gold);">285lb Squat</div>
+      <div class="vision-pill" style="border-color:#c04040; color:#c04040;">Book Published</div>
+      <div class="vision-pill" style="border-color:var(--text-mid); color:var(--text-mid);">CLG Est. 2022</div>
+      <div class="vision-pill" style="border-color:#8b7355; color:#8b7355;">Oregon / Dream Property</div>
+    </div>
+
+    <div class="ns-block">
+      <div class="ns-label">Identity</div>
+      <div class="ns-line">My authenticity is not what I say. It's what I do.</div>
+      <div class="ns-line">The visible pursuit of excellence — consistent, relentless — is who I am.</div>
+      <div class="ns-line">I don't need the room to validate it. I just need to keep moving.</div>
+    </div>
+
+    <div class="ns-block">
+      <div class="ns-label">Veeco — The Strategic Play</div>
+      <div class="ns-line">This role is a vehicle, not a destination. Show up and do meaningful work.</div>
+      <div class="ns-line">Emotionally detached from outcomes. Tactically locked on the process.</div>
+      <div class="ns-line">17 people watching how I lead. The next right thing — every time.</div>
+    </div>
+
+    <div class="ns-block">
+      <div class="ns-label">Marriage</div>
+      <div class="ns-line">Hannah is not an enemy. She is a person in pain who needs presence, not solutions.</div>
+      <div class="ns-line">Deploy the protocols early. Stay in the room. You're on the same team.</div>
+      <div class="ns-line">The work you're doing now is not wasted. It's investment.</div>
+    </div>
+
+    <div class="ns-block">
+      <div class="ns-label">Faith</div>
+      <div class="ns-line">Morning practice is not optional. It is the source.</div>
+      <div class="ns-line">You were baptized in 2018. You are not who you were. Keep becoming.</div>
+      <div class="ns-line">The leaps are real. Don't rationalize them away. Let them lead.</div>
+    </div>
+
+    <div class="divider"></div>
+    <div class="sec-head">Scripture Anchors</div>
+
+    <div class="scripture">
+      <div class="scripture-ref">PROVERBS 16:3</div>
+      <div class="scripture-text">"Commit to the Lord whatever you do and he will establish your plans."</div>
+    </div>
+    <div class="scripture">
+      <div class="scripture-ref">PROVERBS 4:23</div>
+      <div class="scripture-text">"Above all else, guard your heart, for it is the wellspring of life."</div>
+    </div>
+    <div class="scripture">
+      <div class="scripture-ref">2 CORINTHIANS 10:5</div>
+      <div class="scripture-text">"Take captive every thought to make it obedient to Christ."</div>
+    </div>
+    <div class="scripture">
+      <div class="scripture-ref">ROMANS 5:3–5</div>
+      <div class="scripture-text">"Suffering produces perseverance; perseverance, character; and character, hope. And hope does not put us to shame."</div>
+    </div>
+    <div class="scripture">
+      <div class="scripture-ref">EPHESIANS 6:10–12</div>
+      <div class="scripture-text">"Be strong in the Lord and in the strength of his might. Put on the whole armor of God."</div>
+    </div>
+
+  </div>
+
+</div><!-- /scroll -->
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <button class="nav-btn active" onclick="switchTab('morning',this)">
+    <div class="nav-icon">☀</div>
+    <div class="nav-label">Morning</div>
+  </button>
+  <button class="nav-btn" onclick="switchTab('protocols',this)">
+    <div class="nav-icon">⚡</div>
+    <div class="nav-label">Protocols</div>
+  </button>
+  <button class="nav-btn" onclick="switchTab('evening',this)">
+    <div class="nav-icon">🌙</div>
+    <div class="nav-label">Evening</div>
+  </button>
+  <button class="nav-btn" onclick="switchTab('track',this)">
+    <div class="nav-icon">◎</div>
+    <div class="nav-label">Track</div>
+  </button>
+  <button class="nav-btn" onclick="switchTab('north',this)">
+    <div class="nav-icon">★</div>
+    <div class="nav-label">North Star</div>
+  </button>
+</div>
+
+<script>
+// ─── GOOGLE SHEETS CONFIG ────────────────────────────
+// Paste your Apps Script Web App URL here after setup:
+const SHEET_URL = localStorage.getItem('fos_sheet_url') || '';
+
+// ─── CONSTANTS ───────────────────────────────────────
+const SCRIPTURES = [
+  {ref:'PROVERBS 16:3', text:'"Commit to the Lord whatever you do and he will establish your plans."'},
+  {ref:'PROVERBS 4:23', text:'"Above all else, guard your heart, for it is the wellspring of life."'},
+  {ref:'2 CORINTHIANS 10:5', text:'"Take captive every thought to make it obedient to Christ."'},
+  {ref:'ROMANS 5:3–5', text:'"Suffering produces perseverance; perseverance, character; and character, hope."'},
+  {ref:'EPHESIANS 6:10', text:'"Be strong in the Lord and in the strength of his might. Put on the whole armor of God."'},
+];
+
+// ─── STATE ───────────────────────────────────────────
+let S = {
+  pillars: {faith:false, family:false, body:false, veeco:false, write:false},
+  qNeedle:'', qGod:'',
+  qEve1:'', qEve2:'', qEve3:'',
+  dailyLog: {},   // { 'YYYY-MM-DD': { miles, words, pillars:{faith,family,body,veeco,write} } }
+  lastDate:'',
+};
+
+function todayKey() {
+  return new Date().toISOString().split('T')[0];
+}
+function weekKey(d) {
+  const dt = d ? new Date(d) : new Date();
+  const day = dt.getDay();
+  const mon = new Date(dt); mon.setDate(dt.getDate() - (day === 0 ? 6 : day - 1));
+  return mon.toISOString().split('T')[0];
+}
+function monthKey(d) {
+  const dt = d ? new Date(d+'T00:00:00') : new Date();
+  return dt.getFullYear() + '-' + String(dt.getMonth()+1).padStart(2,'0');
+}
+
+// ─── STORAGE ─────────────────────────────────────────
+// ─── SYNC STATUS ─────────────────────────────────────
+let syncTimer = null;
+let syncPending = false;
+
+function showSyncStatus(state) {
+  const el = document.getElementById('syncStatus');
+  if (!el) return;
+  if (state === 'saving') { el.textContent = '↑ saving...'; el.style.color = 'var(--text-dim)'; }
+  else if (state === 'saved') { el.textContent = '✓ saved'; el.style.color = 'var(--green-light)'; }
+  else if (state === 'error') { el.textContent = '⚠ offline'; el.style.color = 'var(--gold)'; }
+  else if (state === 'nourl') { el.textContent = '⚙ setup needed'; el.style.color = 'var(--gold-dim)'; }
+}
+
+async function syncToSheets(payload) {
+  const url = localStorage.getItem('fos_sheet_url');
+  if (!url) { showSyncStatus('nourl'); return; }
+  showSyncStatus('saving');
+  try {
+    await fetch(url, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload)
+    });
+    showSyncStatus('saved');
+  } catch(e) {
+    showSyncStatus('error');
+  }
+}
+
+function scheduleSync() {
+  if (syncTimer) clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => {
+    const today = todayKey();
+    const payload = {
+      type: 'daily',
+      date: today,
+      pillars: S.pillars,
+      qNeedle: S.qNeedle,
+      qGod: S.qGod,
+      miles: S.dailyLog[today]?.miles || 0,
+      words: S.dailyLog[today]?.words || 0,
+      qEve1: S.qEve1,
+      qEve2: S.qEve2,
+      qEve3: S.qEve3,
+    };
+    syncToSheets(payload);
+  }, 2000); // 2 second debounce after typing stops
+}
+
+function save() {
+  S.qNeedle = val('q-needle');
+  S.qGod    = val('q-god');
+  S.qEve1   = val('q-eve1');
+  S.qEve2   = val('q-eve2');
+  S.qEve3   = val('q-eve3');
+  const today = todayKey();
+  if (!S.dailyLog[today]) S.dailyLog[today] = {miles:0, words:0, pillars:{}};
+  S.dailyLog[today].miles = parseFloat(val('miles-today')) || 0;
+  S.dailyLog[today].words = parseInt(val('words-today')) || 0;
+  S.dailyLog[today].pillars = {...S.pillars};
+  try { localStorage.setItem('fos2', JSON.stringify(S)); } catch(e){}
+  updateScore();
+  computeStats();
+  buildStreakGrid();
+  scheduleSync();
+}
+
+function load() {
+  try {
+    const raw = localStorage.getItem('fos2');
+    if (raw) {
+      const loaded = JSON.parse(raw);
+      const today = todayKey();
+      if (loaded.lastDate !== today) {
+        loaded.pillars = {faith:false,family:false,body:false,veeco:false,write:false};
+        loaded.qNeedle=''; loaded.qGod='';
+        loaded.qEve1=''; loaded.qEve2=''; loaded.qEve3='';
+        loaded.lastDate = today;
+      }
+      S = {...S, ...loaded};
+    }
+  } catch(e){}
+
+  // Restore text
+  setVal('q-needle', S.qNeedle);
+  setVal('q-god', S.qGod);
+  setVal('q-eve1', S.qEve1);
+  setVal('q-eve2', S.qEve2);
+  setVal('q-eve3', S.qEve3);
+
+  // Restore today's log
+  const today = todayKey();
+  const log = S.dailyLog[today] || {};
+  setVal('miles-today', log.miles || '');
+  setVal('words-today', log.words || '');
+
+  // Restore pillars
+  Object.keys(S.pillars).forEach(id => {
+    if (S.pillars[id]) applyPillarUI(id, true);
+  });
+
+  refreshAll();
+}
+
+function val(id) { return document.getElementById(id)?.value || ''; }
+function setVal(id, v) { const el=document.getElementById(id); if(el && v) el.value=v; }
+function autoSave() { save(); }
+
+// ─── PILLARS ─────────────────────────────────────────
+function togglePillar(id) {
+  S.pillars[id] = !S.pillars[id];
+  applyPillarUI(id, S.pillars[id]);
+  save();
+}
+function applyPillarUI(id, on) {
+  const row = document.getElementById('p-'+id);
+  const box = document.getElementById('pb-'+id);
+  if (!row) return;
+  if (on) { row.classList.add('checked'); box.style.color='var(--bg)'; row.classList.add('bounce'); setTimeout(()=>row.classList.remove('bounce'),300); }
+  else { row.classList.remove('checked'); box.style.color='transparent'; }
+}
+
+// ─── PROTOCOLS ───────────────────────────────────────
+function toggleProto(id) {
+  const el = document.getElementById('proto-'+id);
+  el.classList.toggle('open');
+}
+
+// ─── TABS ────────────────────────────────────────────
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+  document.getElementById('scrollArea').scrollTop = 0;
+}
+
+// ─── DATE & SCRIPTURE ────────────────────────────────
+function initDate() {
+  const d = new Date();
+  const days=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  const months=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  document.getElementById('dateStr').textContent =
+    days[d.getDay()]+' · '+months[d.getMonth()]+' '+d.getDate()+' · '+d.getFullYear();
+  const s = SCRIPTURES[d.getDate() % SCRIPTURES.length];
+  document.getElementById('scrRef').textContent = s.ref;
+  document.getElementById('scrText').textContent = s.text;
+}
+
+// ─── SCORE PIPS ──────────────────────────────────────
+function updateScore() {
+  const keys = ['faith','family','body','write'];
+  const done = keys.filter(k=>S.pillars[k]).length;
+  const total = keys.length;
+  const pips = document.getElementById('scorePips');
+  const num  = document.getElementById('scoreNum');
+  pips.innerHTML = '';
+  keys.forEach(k=>{
+    const p = document.createElement('div');
+    p.className = 'pip' + (S.pillars[k]?' lit':'');
+    pips.appendChild(p);
+  });
+  num.textContent = done+'/'+total;
+  num.classList.toggle('full', done===total);
+}
+
+// ─── WEEK TOTALS (evening log) ───────────────────────
+function updateWeekTotals() {
+  const today = todayKey();
+  if (!S.dailyLog[today]) S.dailyLog[today] = {miles:0, words:0, pillars:{}};
+  S.dailyLog[today].miles = parseFloat(val('miles-today')) || 0;
+  S.dailyLog[today].words = parseInt(val('words-today')) || 0;
+  S.dailyLog[today].pillars = {...S.pillars};
+  try { localStorage.setItem('fos2', JSON.stringify(S)); } catch(e){}
+  const wk = weekKey();
+  let wMiles=0, wWords=0;
+  Object.entries(S.dailyLog).forEach(([date, log]) => {
+    if (weekKey(date) === wk) {
+      wMiles += parseFloat(log.miles)||0;
+      wWords += parseInt(log.words)||0;
+    }
+  });
+  const el1 = document.getElementById('week-miles-label');
+  const el2 = document.getElementById('week-words-label');
+  if(el1) el1.textContent = 'week: '+wMiles.toFixed(1)+' mi';
+  if(el2) el2.textContent = 'week: '+wWords.toLocaleString()+' wds';
+}
+
+// ─── DASHBOARD STATS ─────────────────────────────────
+function computeStats() {
+  const today = todayKey();
+  const wk = weekKey();
+  const mo = monthKey();
+  const yr = new Date().getFullYear().toString();
+
+  let cw={miles:0,words:0,days:0}, mth={miles:0,words:0,days:0}, yrT={miles:0,words:0,days:0};
+
+  Object.entries(S.dailyLog).forEach(([date, log]) => {
+    const m = parseFloat(log.miles)||0;
+    const w = parseInt(log.words)||0;
+    const allDone = log.pillars && ['faith','family','body','write'].every(k=>log.pillars[k]);
+    const anyDone = log.pillars && Object.values(log.pillars).some(Boolean);
+
+    if (weekKey(date) === wk) {
+      cw.miles += m; cw.words += w;
+      if (anyDone) cw.days++;
+    }
+    if (monthKey(date) === mo) {
+      mth.miles += m; mth.words += w;
+      if (anyDone) mth.days++;
+    }
+    if (date.startsWith(yr)) {
+      yrT.miles += m; yrT.words += w;
+      if (anyDone) yrT.days++;
+    }
+  });
+
+  // Current week
+  setText('cw-miles', cw.miles.toFixed(1));
+  setText('cw-words', cw.words.toLocaleString());
+  setText('cw-streak', cw.days);
+
+  // Monthly
+  setText('mo-miles', mth.miles.toFixed(1));
+  setText('mo-words', mth.words >= 1000 ? (mth.words/1000).toFixed(1)+'k' : mth.words);
+  setText('mo-days', mth.days);
+
+  // Yearly
+  setText('yr-miles', yrT.miles.toFixed(1));
+  setText('yr-words', yrT.words >= 1000 ? (yrT.words/1000).toFixed(1)+'k' : yrT.words);
+  setText('yr-days', yrT.days);
+
+  // Progress bars
+  const milesPct = Math.min(100, (yrT.miles / 300)*100);
+  const wordsPct = Math.min(100, (yrT.words / 40000)*100);
+  const daysPct  = Math.min(100, (yrT.days / 130)*100);
+  setBar('gp-miles-bar', milesPct); setText('gp-miles-val', yrT.miles.toFixed(0)+' mi');
+  setBar('gp-words-bar', wordsPct); setText('gp-words-val', yrT.words >= 1000 ? (yrT.words/1000).toFixed(1)+'k' : yrT.words+' wds');
+  setBar('gp-days-bar',  daysPct);  setText('gp-days-val', yrT.days+' days');
+
+  // Weekly history
+  buildWeekHistory(yrT);
+}
+
+function setText(id,v) { const el=document.getElementById(id); if(el) el.textContent=v; }
+function setBar(id,pct) { const el=document.getElementById(id); if(el) el.style.width=pct+'%'; }
+
+// ─── STREAK GRID ─────────────────────────────────────
+function buildStreakGrid() {
+  const container = document.getElementById('streakDays');
+  if (!container) return;
+  container.innerHTML = '';
+  const today = new Date();
+  const todayKey2 = todayKey();
+
+  for (let i=29; i>=0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate()-i);
+    const key = d.toISOString().split('T')[0];
+    const log = S.dailyLog[key];
+    const isToday = key === todayKey2;
+
+    const pillarsToCheck = ['faith','family','body','write'];
+    const doneCt = log?.pillars ? pillarsToCheck.filter(k=>log.pillars[k]).length : 0;
+    const allDone = doneCt === pillarsToCheck.length;
+    const partial = doneCt > 0 && !allDone;
+    const isRest = log?.pillars?.body === false && doneCt > 0; // rest day = body unchecked but others done
+
+    const el = document.createElement('div');
+    el.className = 's-day';
+    if (isToday) el.classList.add('today');
+    if (allDone) el.classList.add('full');
+    else if (isRest) el.classList.add('rest');
+    else if (partial) el.classList.add('partial');
+    el.textContent = d.getDate();
+    container.appendChild(el);
+  }
+}
+
+// ─── WEEK HISTORY ─────────────────────────────────────
+function buildWeekHistory() {
+  const container = document.getElementById('weekHistory');
+  if (!container) return;
+
+  // Group by week
+  const weeks = {};
+  Object.entries(S.dailyLog).forEach(([date, log]) => {
+    const wk = weekKey(date);
+    if (!weeks[wk]) weeks[wk] = {miles:0, words:0, days:0};
+    weeks[wk].miles += parseFloat(log.miles)||0;
+    weeks[wk].words += parseInt(log.words)||0;
+    if (log.pillars && Object.values(log.pillars).some(Boolean)) weeks[wk].days++;
+  });
+
+  const sorted = Object.entries(weeks).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,8);
+  if (sorted.length === 0) {
+    container.innerHTML = '<div style="font-family:\'Crimson Pro\',serif;font-size:14px;color:var(--text-dim);font-style:italic;text-align:center;padding:8px 0;">No weeks logged yet.</div>';
+    return;
+  }
+
+  container.innerHTML = sorted.map(([wk, data]) => {
+    const dt = new Date(wk+'T00:00:00');
+    const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const label = months[dt.getMonth()]+' '+dt.getDate();
+    const isCurrentWk = wk === weekKey();
+    return `<div class="week-row">
+      <div>
+        <div class="week-label">WK OF ${label.toUpperCase()}${isCurrentWk?' <span style="color:var(--gold);">·</span>':''}</div>
+      </div>
+      <div class="week-stats">
+        <div class="week-stat"><div class="week-stat-val">${data.miles.toFixed(1)}</div><div class="week-stat-lbl">mi</div></div>
+        <div class="week-stat"><div class="week-stat-val">${data.words>=1000?(data.words/1000).toFixed(1)+'k':data.words}</div><div class="week-stat-lbl">wds</div></div>
+        <div class="week-stat"><div class="week-stat-val">${data.days}</div><div class="week-stat-lbl">days</div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── REFRESH ALL ─────────────────────────────────────
+function refreshAll() {
+  updateScore();
+  updateWeekTotals();
+  computeStats();
+  buildStreakGrid();
+}
+
+
+// ─── SETUP MODAL ─────────────────────────────────────
+function openSetup() {
+  document.getElementById('setupModal').style.display = 'flex';
+  const saved = localStorage.getItem('fos_sheet_url') || '';
+  document.getElementById('urlInput').value = saved;
+}
+function closeSetup() {
+  document.getElementById('setupModal').style.display = 'none';
+}
+function saveSheetUrl() {
+  const url = document.getElementById('urlInput').value.trim();
+  if (url) {
+    localStorage.setItem('fos_sheet_url', url);
+    closeSetup();
+    scheduleSync();
+  }
+}
+
+// ─── INIT ────────────────────────────────────────────
+initDate();
+load();
+showSyncStatus(localStorage.getItem('fos_sheet_url') ? 'saved' : 'nourl');
+</script>
+
+<!-- SETUP MODAL -->
+<div id="setupModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:2000;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#181510;border:1px solid rgba(200,153,58,0.4);border-radius:12px;padding:24px;max-width:400px;width:100%;">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:0.1em;color:#c8993a;margin-bottom:4px;">Google Sheets Setup</div>
+    <div style="font-family:'Crimson Pro',serif;font-size:13px;color:#6a5f48;font-style:italic;margin-bottom:20px;line-height:1.6;">One-time setup. Your data goes to a Sheet you own.</div>
+    <div style="font-family:'Crimson Pro',serif;font-size:13px;color:#9a8e72;line-height:1.9;margin-bottom:20px;">
+      1. Go to <strong style="color:#ddd4b8;">sheets.google.com</strong> → new sheet → name it <strong style="color:#ddd4b8;">Field OS</strong><br>
+      2. Click <strong style="color:#ddd4b8;">Extensions → Apps Script</strong><br>
+      3. Delete all code → paste the Apps Script from the instructions doc<br>
+      4. Click <strong style="color:#ddd4b8;">Deploy → New Deployment → Web App</strong><br>
+      5. Set access to <strong style="color:#ddd4b8;">Anyone</strong> → Deploy → copy URL<br>
+      6. Paste URL below ↓
+    </div>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:0.14em;color:#c8993a;margin-bottom:8px;text-transform:uppercase;">Web App URL</div>
+    <input id="urlInput" type="url" placeholder="https://script.google.com/macros/s/..." style="width:100%;background:rgba(0,0,0,0.5);border:1px solid rgba(200,153,58,0.3);border-radius:6px;padding:10px 12px;color:#ddd4b8;font-family:'Share Tech Mono',monospace;font-size:10px;outline:none;margin-bottom:16px;box-sizing:border-box;">
+    <div style="display:flex;gap:10px;">
+      <button onclick="saveSheetUrl()" style="flex:1;padding:12px;background:#c8993a;border:none;border-radius:7px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.1em;color:#0b0a07;cursor:pointer;">Connect</button>
+      <button onclick="closeSetup()" style="padding:12px 18px;background:transparent;border:1px solid rgba(200,184,130,0.15);border-radius:7px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.1em;color:#6a5f48;cursor:pointer;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
