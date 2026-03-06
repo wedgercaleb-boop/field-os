@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Field OS">
+<title>Field OS</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0907;
+  --bg2: #100f0c;
+  --bg3: #161410;
+  --gold: #c8993a;
+  --gold-dim: #7a5e22;
+  --gold-glow: rgba(200,153,58,0.12);
+  --gold-border: rgba(200,153,58,0.25);
+  --red: #8b2020;
+  --blue: #2d5480;
+  --blue-light: #5a90c8;
+  --green: #3a7a42;
+  --green-light: #5aaa64;
+  --text: #e8dfc8;
+  --text-dim: #5a5040;
+  --text-mid: #9a8e72;
+  --border: rgba(200,184,130,0.08);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Crimson Pro', Georgia, serif;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  width: 100%;
+  top: 0; left: 0;
+}
+
+/* GRAIN */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 999;
+}
+
+/* ── HERO HEADER ── */
+.hero {
+  flex-shrink: 0;
+  padding: calc(var(--safe-top) + 18px) 20px 16px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+  position: relative;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(200,153,58,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+.date-line {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.identity-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin-bottom: 4px;
+}
+.id-word {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  letter-spacing: 0.16em;
+  color: var(--gold);
+  text-shadow: 0 0 30px rgba(200,153,58,0.4), 0 0 60px rgba(200,153,58,0.15);
+  flex: 1;
+  text-align: center;
+  line-height: 1;
+}
+.id-sep {
+  width: 1px;
+  height: 24px;
+  background: var(--gold-border);
+  flex-shrink: 0;
+}
+.verse-of-day {
+  font-family: 'Crimson Pro', serif;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--text-dim);
+  letter-spacing: 0.01em;
+  margin-top: 6px;
+  line-height: 1.4;
+}
+.verse-ref {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  color: var(--gold-dim);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+/* ── SCROLL ── */
+.scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 8px;
+}
+.scroll-area::-webkit-scrollbar { display: none; }
+
+/* ── TABS ── */
+.tab { display: none; padding: 20px 18px; }
+.tab.active { display: block; animation: fadeUp 0.2s ease; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── NAV ── */
+.bottom-nav {
+  flex-shrink: 0;
+  display: flex;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  padding-bottom: var(--safe-bottom);
+}
+.nav-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 2px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  gap: 4px;
+  position: relative;
+}
+.nav-btn.active::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 25%; right: 25%;
+  height: 2px;
+  background: var(--gold);
+  box-shadow: 0 0 8px var(--gold);
+  border-radius: 0 0 2px 2px;
+}
+.nav-icon { font-size: 20px; color: var(--text-dim); transition: all 0.2s; }
+.nav-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  transition: all 0.2s;
+}
+.nav-btn.active .nav-icon,
+.nav-btn.active .nav-label { color: var(--gold); }
+
+/* ── SECTION LABEL ── */
+.sec {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sec::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* ── IDENTITY TAB ── */
+.identity-hero {
+  text-align: center;
+  padding: 24px 16px 28px;
+  background: linear-gradient(135deg, rgba(200,153,58,0.06) 0%, transparent 60%);
+  border: 1px solid var(--gold-border);
+  border-radius: 14px;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.identity-hero::before {
+  content: '';
+  position: absolute;
+  top: -40px; left: 50%;
+  transform: translateX(-50%);
+  width: 200px; height: 100px;
+  background: radial-gradient(ellipse, rgba(200,153,58,0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+.ih-word {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 42px;
+  letter-spacing: 0.12em;
+  color: var(--gold);
+  text-shadow: 0 0 40px rgba(200,153,58,0.3);
+  line-height: 1;
+  display: block;
+}
+.ih-sep {
+  width: 40px;
+  height: 1px;
+  background: var(--gold-border);
+  margin: 10px auto;
+}
+.ih-sub {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+.identity-statement {
+  font-family: 'Crimson Pro', serif;
+  font-size: 19px;
+  line-height: 1.75;
+  color: var(--text-mid);
+  margin-bottom: 12px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+}
+.identity-statement:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.identity-statement strong { color: var(--text); font-weight: 600; }
+
+/* ── GOAL PILLS ── */
+.goals-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.goal-pill {
+  padding: 16px 12px;
+  border-radius: 10px;
+  border: 1px solid;
+  text-align: center;
+}
+.goal-pill-label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.goal-pill-sub {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+/* ── SCRIPTURE TAB ── */
+.verse-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--red);
+  border-radius: 0 10px 10px 0;
+  padding: 18px 18px 18px 20px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+.verse-card:active { transform: scale(0.99); }
+.verse-card.featured {
+  border-left-color: var(--gold);
+  background: var(--gold-glow);
+}
+.verse-ref-label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px;
+  letter-spacing: 0.18em;
+  margin-bottom: 8px;
+}
+.verse-text {
+  font-family: 'Crimson Pro', serif;
+  font-size: 18px;
+  font-style: italic;
+  color: var(--text-mid);
+  line-height: 1.75;
+}
+.verse-card.featured .verse-text { color: var(--text); }
+.verse-expand {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+  margin-top: 10px;
+  text-transform: uppercase;
+}
+
+/* ── PROTOCOL TAB ── */
+.proto {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.proto.open { border-color: var(--gold-border); }
+.proto-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+  cursor: pointer;
+}
+.proto-pip {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.proto-titles { flex: 1; }
+.proto-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
+.proto-tag {
+  font-family: 'Crimson Pro', serif;
+  font-size: 15px;
+  font-style: italic;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+.proto-arrow {
+  font-size: 16px;
+  color: var(--text-dim);
+  transition: transform 0.25s;
+  flex-shrink: 0;
+}
+.proto.open .proto-arrow { transform: rotate(180deg); }
+.proto-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease;
+}
+.proto.open .proto-body { max-height: 700px; }
+.proto-inner {
+  padding: 0 18px 18px;
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+}
+.proto-step {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+  font-size: 17px;
+  color: var(--text-mid);
+  line-height: 1.65;
+}
+.step-n {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+  flex-shrink: 0;
+  margin-top: 5px;
+  letter-spacing: 0.05em;
+}
+.proto-anchor {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 6px;
+  font-style: italic;
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+/* ── NORTH STAR TAB ── */
+.ns-block { margin-bottom: 22px; }
+.ns-label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.25em;
+  color: var(--gold-dim);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ns-label::before { content:''; width:16px; height:1px; background:var(--gold-dim); flex-shrink:0; }
+.ns-line {
+  padding: 10px 0 10px 16px;
+  border-left: 2px solid rgba(200,153,58,0.15);
+  font-size: 18px;
+  color: var(--text-mid);
+  line-height: 1.7;
+  margin-bottom: 4px;
+}
+.primary-goal {
+  text-align: center;
+  padding: 22px 16px;
+  background: var(--gold-glow);
+  border: 1px solid var(--gold-border);
+  border-radius: 12px;
+  margin-bottom: 22px;
+}
+.pg-eyebrow {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--gold-dim);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.pg-text {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  letter-spacing: 0.07em;
+  color: var(--gold);
+  line-height: 1.3;
+}
+.pg-sub {
+  font-family: 'Crimson Pro', serif;
+  font-size: 14px;
+  font-style: italic;
+  color: var(--text-dim);
+  margin-top: 8px;
+  line-height: 1.6;
+}
+</style>
+</head>
+<body>
+
+<!-- HERO HEADER -->
+<div class="hero">
+  <div class="date-line" id="dateStr">—</div>
+  <div class="identity-row">
+    <div class="id-word">UNAFRAID</div>
+    <div class="id-sep"></div>
+    <div class="id-word">BELOVED SON</div>
+    <div class="id-sep"></div>
+    <div class="id-word">WARRIOR POET</div>
+  </div>
+  <div class="verse-of-day" id="heroVerse">—</div>
+  <div class="verse-ref" id="heroVerseRef">—</div>
+</div>
+
+<!-- SCROLL -->
+<div class="scroll-area" id="scrollArea">
+
+  <!-- ══ TAB: IDENTITY ══ -->
+  <div class="tab active" id="tab-identity">
+
+    <div class="identity-hero">
+      <span class="ih-word">UNAFRAID</span>
+      <div class="ih-sep"></div>
+      <div class="ih-sub">posture</div>
+      <div style="height:16px;"></div>
+      <span class="ih-word">BELOVED SON</span>
+      <div class="ih-sep"></div>
+      <div class="ih-sub">identity</div>
+      <div style="height:16px;"></div>
+      <span class="ih-word">WARRIOR POET</span>
+      <div class="ih-sep"></div>
+      <div class="ih-sub">calling</div>
+    </div>
+
+    <div class="sec">Who I Am</div>
+
+    <div class="identity-statement">
+      My authenticity is not what I say. It's <strong>what I do.</strong>
+    </div>
+    <div class="identity-statement">
+      The visible pursuit of excellence — consistent, relentless — <strong>is who I am.</strong>
+    </div>
+    <div class="identity-statement">
+      I don't need the room to validate it. <strong>I just need to keep moving.</strong>
+    </div>
+    <div class="identity-statement">
+      I operate from <strong>strength, not fear.</strong> From identity, not approval.
+    </div>
+    <div class="identity-statement">
+      Excellence is the evidence. <strong>I don't need the verdict.</strong>
+    </div>
+
+    <div style="height:20px;"></div>
+    <div class="sec">The Targets</div>
+
+    <div class="goals-grid">
+      <div class="goal-pill" style="border-color:rgba(90,144,200,0.4); background:rgba(45,84,128,0.1);">
+        <div class="goal-pill-label" style="color:#5a90c8;">Sub-20</div>
+        <div class="goal-pill-sub" style="color:#5a90c8;">5K · min</div>
+      </div>
+      <div class="goal-pill" style="border-color:rgba(90,170,100,0.4); background:rgba(58,122,66,0.1);">
+        <div class="goal-pill-label" style="color:#5aaa64;">285 lb</div>
+        <div class="goal-pill-sub" style="color:#5aaa64;">squat</div>
+      </div>
+      <div class="goal-pill" style="border-color:rgba(200,153,58,0.4); background:rgba(200,153,58,0.07);">
+        <div class="goal-pill-label" style="color:var(--gold);">ULTRA</div>
+        <div class="goal-pill-sub" style="color:var(--gold);">marathon</div>
+      </div>
+      <div class="goal-pill" style="border-color:rgba(192,64,64,0.4); background:rgba(139,32,32,0.1);">
+        <div class="goal-pill-label" style="color:#c04040;">BOOK</div>
+        <div class="goal-pill-sub" style="color:#c04040;">published</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ TAB: SCRIPTURE ══ -->
+  <div class="tab" id="tab-scripture">
+
+    <div class="sec">Today's Verse</div>
+    <div class="verse-card featured" id="featuredVerse">
+      <div class="verse-ref-label" id="featuredRef" style="color:var(--gold);">—</div>
+      <div class="verse-text" id="featuredText">—</div>
+    </div>
+
+    <div class="sec" style="margin-top:20px;">All Verses</div>
+    <div id="verseList"></div>
+
+  </div>
+
+  <!-- ══ TAB: PROTOCOLS ══ -->
+  <div class="tab" id="tab-protocols">
+
+    <div class="sec">Deploy When Needed</div>
+
+    <!-- Benevolent Detachment -->
+    <div class="proto" id="proto-detach">
+      <div class="proto-head" onclick="toggleProto('detach')">
+        <div class="proto-pip" style="background:#5a90c8; box-shadow:0 0 8px #2d5480;"></div>
+        <div class="proto-titles">
+          <div class="proto-name" style="color:#5a90c8;">Benevolent Detachment</div>
+          <div class="proto-tag">Care deeply. Control nothing.</div>
+        </div>
+        <div class="proto-arrow">▾</div>
+      </div>
+      <div class="proto-body">
+        <div class="proto-inner">
+          <div class="proto-step"><span class="step-n">01</span><span>Name what you're feeling — don't suppress it, just locate it.</span></div>
+          <div class="proto-step"><span class="step-n">02</span><span>Ask: Is this mine to carry, or am I trying to fix someone else's interior?</span></div>
+          <div class="proto-step"><span class="step-n">03</span><span>Speak your truth clearly, once. Then release the outcome.</span></div>
+          <div class="proto-step"><span class="step-n">04</span><span>Their response is their work. Your response is yours.</span></div>
+          <div class="proto-step"><span class="step-n">05</span><span>Stay warm. Stay present. Don't disappear — just don't grip.</span></div>
+          <div class="proto-anchor" style="background:rgba(45,84,128,0.12); border-left:3px solid #5a90c8; color:#5a90c8;">
+            "I can love fully without needing to control the result."
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- No External Validation -->
+    <div class="proto" id="proto-valid">
+      <div class="proto-head" onclick="toggleProto('valid')">
+        <div class="proto-pip" style="background:var(--gold); box-shadow:0 0 8px var(--gold-dim);"></div>
+        <div class="proto-titles">
+          <div class="proto-name" style="color:var(--gold);">No External Validation</div>
+          <div class="proto-tag">Excellence is the evidence.</div>
+        </div>
+        <div class="proto-arrow">▾</div>
+      </div>
+      <div class="proto-body">
+        <div class="proto-inner">
+          <div class="proto-step"><span class="step-n">01</span><span>Check the motive before acting — am I doing this because it's right, or to be seen?</span></div>
+          <div class="proto-step"><span class="step-n">02</span><span>If approval comes — receive it gracefully. Don't chase it.</span></div>
+          <div class="proto-step"><span class="step-n">03</span><span>If approval doesn't come — do it anyway. The work is the standard.</span></div>
+          <div class="proto-step"><span class="step-n">04</span><span>My authenticity IS my visible pursuit of excellence. Keep moving.</span></div>
+          <div class="proto-step"><span class="step-n">05</span><span>Would I do this if no one ever knew? That's the filter.</span></div>
+          <div class="proto-anchor" style="background:var(--gold-glow); border-left:3px solid var(--gold); color:var(--gold);">
+            "I don't need the room to see it. I just need to do it."
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stay Out of the Mud -->
+    <div class="proto" id="proto-mud">
+      <div class="proto-head" onclick="toggleProto('mud')">
+        <div class="proto-pip" style="background:#c04040; box-shadow:0 0 8px #8b2020;"></div>
+        <div class="proto-titles">
+          <div class="proto-name" style="color:#c04040;">Stay Out of the Mud</div>
+          <div class="proto-tag">Recognize it. Don't step in. Walk past.</div>
+        </div>
+        <div class="proto-arrow">▾</div>
+      </div>
+      <div class="proto-body">
+        <div class="proto-inner">
+          <div class="proto-step"><span class="step-n">01</span><span><strong style="color:#c04040;">PAUSE.</strong> Notice the pull. Something wants you reactive right now.</span></div>
+          <div class="proto-step"><span class="step-n">02</span><span>You don't have to fix it, win it, or respond to it. Not every fire is yours.</span></div>
+          <div class="proto-step"><span class="step-n">03</span><span>Lower your voice one level. Slow down physically.</span></div>
+          <div class="proto-step"><span class="step-n">04</span><span>Presence over performance. Warmth over winning.</span></div>
+          <div class="proto-step"><span class="step-n">05</span><span>Create space if needed: "Give me 5 minutes." Then return grounded.</span></div>
+          <div class="proto-step"><span class="step-n">06</span><span>The high road is always available. Take it.</span></div>
+          <div class="proto-anchor" style="background:rgba(139,32,32,0.08); border-left:3px solid #8b2020; color:#c04040;">
+            "I am not who I was. I choose the high road."
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ TAB: NORTH STAR ══ -->
+  <div class="tab" id="tab-north">
+
+    <div class="primary-goal">
+      <div class="pg-eyebrow">Primary Goal — 2026</div>
+      <div class="pg-text">Am I closer to Jesus<br>than I've ever been?</div>
+      <div class="pg-sub">Manuscript · Running · Strategic at Work · Family more connected</div>
+    </div>
+
+    <div class="ns-block">
+      <div class="ns-label">Identity</div>
+      <div class="ns-line">My authenticity is not what I say. It's what I do.</div>
+      <div class="ns-line">The visible pursuit of excellence is who I am — not a performance, a posture.</div>
+      <div class="ns-line">I don't need the room to validate it. I just need to keep moving.</div>
+    </div>
+
+    <div class="ns-block">
+      <div class="ns-label">The Work</div>
+      <div class="ns-line">Showing up and doing meaningful work is the strategic play.</div>
+      <div class="ns-line">Emotionally detached from outcomes. Tactically locked on the process.</div>
+      <div class="ns-line">The next right thing — every time. That's the whole job.</div>
+    </div>
+
+    <div class="ns-block">
+      <div class="ns-label">Faith</div>
+      <div class="ns-line">Morning practice is not optional. It is the source.</div>
+      <div class="ns-line">Baptized 2018. Not who I was. Keep becoming.</div>
+      <div class="ns-line">The leaps are real. Don't rationalize them away. Let them lead.</div>
+    </div>
+
+    <div class="ns-block">
+      <div class="ns-label">The Book</div>
+      <div class="ns-line">It doesn't have to be good. It has to be real.</div>
+      <div class="ns-line">One paragraph a day is a book in six months.</div>
+      <div class="ns-line">The fear of not being good enough has nothing to publish. You do.</div>
+    </div>
+
+    <div class="ns-block">
+      <div class="ns-label">Red Flags — Recalibrate Immediately</div>
+      <div class="ns-line" style="border-left-color:rgba(139,32,32,0.4); color:#8a6050;">Missing non-negotiables 3+ days in a row</div>
+      <div class="ns-line" style="border-left-color:rgba(139,32,32,0.4); color:#8a6050;">Grinding instead of building</div>
+      <div class="ns-line" style="border-left-color:rgba(139,32,32,0.4); color:#8a6050;">Family feels like obligation, not priority</div>
+      <div class="ns-line" style="border-left-color:rgba(139,32,32,0.4); color:#8a6050;">Spiritual life feels dry or distant</div>
+    </div>
+
+  </div>
+
+</div><!-- /scroll -->
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <button class="nav-btn active" onclick="switchTab('identity', this)">
+    <div class="nav-icon">✦</div>
+    <div class="nav-label">Identity</div>
+  </button>
+  <button class="nav-btn" onclick="switchTab('scripture', this)">
+    <div class="nav-icon">✝</div>
+    <div class="nav-label">Scripture</div>
+  </button>
+  <button class="nav-btn" onclick="switchTab('protocols', this)">
+    <div class="nav-icon">⚡</div>
+    <div class="nav-label">Protocols</div>
+  </button>
+  <button class="nav-btn" onclick="switchTab('north', this)">
+    <div class="nav-icon">★</div>
+    <div class="nav-label">North Star</div>
+  </button>
+</div>
+
+<script>
+// ─── SCRIPTURE LIBRARY ───────────────────────────────
+const VERSES = [
+  { ref: 'PROVERBS 16:3',       text: 'Commit to the Lord whatever you do and he will establish your plans.' },
+  { ref: 'PROVERBS 4:23',       text: 'Above all else, guard your heart, for it is the wellspring of life.' },
+  { ref: '2 CORINTHIANS 10:5',  text: 'Take captive every thought to make it obedient to Christ.' },
+  { ref: 'ROMANS 5:3–5',        text: 'Suffering produces perseverance; perseverance, character; and character, hope. And hope does not put us to shame.' },
+  { ref: 'EPHESIANS 6:10–11',   text: 'Be strong in the Lord and in the strength of his might. Put on the whole armor of God.' },
+  { ref: 'JOSHUA 1:9',          text: 'Be strong and courageous. Do not be afraid; do not be discouraged, for the Lord your God will be with you wherever you go.' },
+  { ref: 'ISAIAH 40:31',        text: 'Those who hope in the Lord will renew their strength. They will soar on wings like eagles; they will run and not grow weary.' },
+  { ref: 'PHILIPPIANS 4:13',    text: 'I can do all this through him who gives me strength.' },
+  { ref: 'PHILIPPIANS 4:6–7',   text: 'Do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving, present your requests to God.' },
+  { ref: 'PSALM 46:10',         text: 'Be still, and know that I am God.' },
+  { ref: 'PSALM 23:4',          text: 'Even though I walk through the darkest valley, I will fear no evil, for you are with me.' },
+  { ref: 'PSALM 18:32',         text: 'It is God who arms me with strength and keeps my way secure.' },
+  { ref: 'ROMANS 8:28',         text: 'And we know that in all things God works for the good of those who love him, who have been called according to his purpose.' },
+  { ref: 'ROMANS 8:37',         text: 'In all these things we are more than conquerors through him who loved us.' },
+  { ref: '1 CORINTHIANS 16:13', text: 'Be on your guard; stand firm in the faith; be courageous; be strong.' },
+  { ref: 'GALATIANS 6:9',       text: 'Let us not become weary in doing good, for at the proper time we will reap a harvest if we do not give up.' },
+  { ref: 'JAMES 1:2–4',         text: 'Consider it pure joy whenever you face trials of many kinds, because the testing of your faith produces perseverance.' },
+  { ref: 'HEBREWS 12:1',        text: 'Let us run with perseverance the race marked out for us, fixing our eyes on Jesus.' },
+  { ref: 'HEBREWS 11:1',        text: 'Now faith is confidence in what we hope for and assurance about what we do not see.' },
+  { ref: 'MATTHEW 5:16',        text: 'Let your light shine before others, that they may see your good deeds and glorify your Father in heaven.' },
+  { ref: 'MATTHEW 6:33',        text: 'But seek first his kingdom and his righteousness, and all these things will be given to you as well.' },
+  { ref: 'JOHN 10:10',          text: 'I have come that they may have life, and have it to the full.' },
+  { ref: 'JOHN 16:33',          text: 'In this world you will have trouble. But take heart! I have overcome the world.' },
+  { ref: '2 TIMOTHY 1:7',       text: 'For the Spirit God gave us does not make us timid, but gives us power, love and self-discipline.' },
+  { ref: 'MICAH 6:8',           text: 'Act justly, love mercy, and walk humbly with your God.' },
+  { ref: 'LAMENTATIONS 3:22–23',text: 'The steadfast love of the Lord never ceases; his mercies never come to an end; they are new every morning.' },
+  { ref: 'ZEPHANIAH 3:17',      text: 'The Lord your God is with you, the Mighty Warrior who saves. He will take great delight in you.' },
+  { ref: 'ISAIAH 41:10',        text: 'Do not fear, for I am with you; do not be dismayed, for I am your God. I will strengthen you and help you.' },
+  { ref: 'PROVERBS 27:17',      text: 'As iron sharpens iron, so one person sharpens another.' },
+  { ref: 'COLOSSIANS 3:23',     text: 'Whatever you do, work at it with all your heart, as working for the Lord, not for human masters.' },
+];
+
+// ─── INIT DATE & VERSE ───────────────────────────────
+function initDate() {
+  const d = new Date();
+  const days   = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  document.getElementById('dateStr').textContent =
+    days[d.getDay()] + ' · ' + months[d.getMonth()] + ' ' + d.getDate() + ' · ' + d.getFullYear();
+
+  // Daily verse — rotates every day
+  const idx = (d.getDate() + d.getMonth() * 7) % VERSES.length;
+  const v = VERSES[idx];
+
+  // Header
+  document.getElementById('heroVerse').textContent = '"' + v.text.substring(0, 60) + (v.text.length > 60 ? '…' : '"');
+  document.getElementById('heroVerseRef').textContent = v.ref;
+
+  // Featured verse card
+  document.getElementById('featuredRef').textContent = v.ref;
+  document.getElementById('featuredText').textContent = '"' + v.text + '"';
+
+  // All verses list
+  const list = document.getElementById('verseList');
+  VERSES.forEach((verse, i) => {
+    const card = document.createElement('div');
+    card.className = 'verse-card';
+    card.innerHTML = `
+      <div class="verse-ref-label" style="color:#8b3030;">${verse.ref}</div>
+      <div class="verse-text">"${verse.text}"</div>
+    `;
+    list.appendChild(card);
+  });
+}
+
+// ─── PROTOCOLS ───────────────────────────────────────
+function toggleProto(id) {
+  const el = document.getElementById('proto-' + id);
+  // Close others
+  document.querySelectorAll('.proto').forEach(p => {
+    if (p.id !== 'proto-' + id) p.classList.remove('open');
+  });
+  el.classList.toggle('open');
+  if (el.classList.contains('open')) {
+    setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+  }
+}
+
+// ─── TABS ────────────────────────────────────────────
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+  document.getElementById('scrollArea').scrollTop = 0;
+}
+
+// ─── INIT ────────────────────────────────────────────
+initDate();
+</script>
+</body>
+</html>
